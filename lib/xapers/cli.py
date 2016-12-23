@@ -139,7 +139,7 @@ def print_doc_summary(doc):
 def add(db, query_string, infile=None, sid=None, tags=None, prompt=False):
 
     doc = None
-    bibtex = None
+    bibentry = None
 
     sources = Sources()
     doc_sid = sid
@@ -201,7 +201,18 @@ def add(db, query_string, infile=None, sid=None, tags=None, prompt=False):
 
     # check if source is a file, in which case interpret it as bibtex
     if doc_sid and os.path.exists(doc_sid):
-        bibtex = doc_sid
+        try:
+            print >>sys.stderr, "Parsing bibtex...",
+            bibentry = Bibtex.from_file(doc_sid)[0]
+            print >>sys.stderr, "done."
+        except BibtexError as e:
+            print >>sys.stderr, "\n"
+            print >>sys.stderr, e
+            print >>sys.stderr, "Bibtex must be a plain text file with a single bibtex entry."
+            sys.exit(1)
+        except:
+            print >>sys.stderr, "\n"
+            raise
 
     elif doc_sid:
         # get source object for sid string
@@ -229,6 +240,19 @@ def add(db, query_string, infile=None, sid=None, tags=None, prompt=False):
             print >>sys.stderr, "\n"
             print >>sys.stderr, "Could not retrieve bibtex: %s" % e
             sys.exit(1)
+
+        try:
+            print >>sys.stderr, "Parsing bibtex...",
+            bibentry = Bibtex.from_string(bibtex)[0]
+            print >>sys.stderr, "done."
+        except BibtexError as e:
+            print >>sys.stderr, "\n"
+            print >>sys.stderr, e
+            print >>sys.stderr, "Bibtex must be a plain text file with a single bibtex entry."
+            sys.exit(1)
+        except:
+            print >>sys.stderr, "\n"
+            raise
 
         if infile is True:
             try:
@@ -258,10 +282,10 @@ def add(db, query_string, infile=None, sid=None, tags=None, prompt=False):
     ##################################
     # add stuff to the doc
 
-    if bibtex:
+    if bibentry:
         try:
             print >>sys.stderr, "Adding bibtex...",
-            doc.add_bibtex(bibtex)
+            doc.add_bibentry(bibentry)
             print >>sys.stderr, "done."
         except BibtexError as e:
             print >>sys.stderr, "\n"
@@ -319,7 +343,7 @@ def importbib(db, bibfile, tags=[], overwrite=False):
 
     sources = Sources()
 
-    for entry in sorted(Bibtex(bibfile), key=lambda entry: entry.key):
+    for entry in sorted(Bibtex.from_file(bibfile), key=lambda entry: entry.key):
         print >>sys.stderr, entry.key
 
         try:

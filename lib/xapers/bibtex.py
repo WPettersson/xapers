@@ -28,7 +28,6 @@ from pybtex.database import Entry, Person
 from pybtex.database.input import bibtex as inparser
 from pybtex.database.output import bibtex as outparser
 
-
 def clean_bib_string(string):
     for char in ['{', '}']:
         string = string.replace(char,'')
@@ -50,24 +49,27 @@ class Bibtex():
 
     """
     # http://www.bibtex.org/Format/
-    def __init__(self, bibtex):
-
-        parser = inparser.Parser(encoding='utf-8')
-
-        if os.path.exists(bibtex):
-            bibdata = parser.parse_file(bibtex)
-        else:
-            # StringIO requires unicode input
-            # http://nedbatchelder.com/text/unipain.html
-            assert type(bibtex) is unicode, "Bibtex strings must be unicode"
-            with io.StringIO(bibtex) as stream:
-                bibdata = parser.parse_stream(stream)
-
+    def __init__(self, bibdata):
         self.keys = bibdata.entries.keys()
         self.entries = bibdata.entries.values()
-
         self.index = -1
         self.max = len(self.entries)
+
+    @classmethod
+    def from_file(cls, bibfile):
+        parser = inparser.Parser(encoding='utf-8')
+        bibdata = parser.parse_file(bibfile)
+        return cls(bibdata)
+
+    @classmethod
+    def from_string(cls, bibstring):
+        # StringIO requires unicode input
+        # http://nedbatchelder.com/text/unipain.html
+        assert type(bibstring) is unicode, "Bibtex strings must be unicode"
+        parser = inparser.Parser(encoding='utf-8')
+        with io.StringIO(bibstring) as stream:
+            bibdata = parser.parse_stream(stream)
+        return cls(bibdata)
 
     def __getitem__(self, index):
         key = self.keys[index]

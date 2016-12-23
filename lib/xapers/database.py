@@ -24,6 +24,7 @@ import xapian
 
 from source import Sources
 from documents import Documents, Document
+from bibtex import Bibtex
 
 # FIXME: add db schema documentation
 
@@ -361,7 +362,7 @@ class Database():
                 if dfile == 'bibtex':
                     if log:
                         print >>sys.stderr, '  adding bibtex'
-                    doc.add_bibtex(dpath)
+                    doc.add_bibentry(Bibtex.from_file(dpath)[0])
                 elif dfile == 'tags':
                     if log:
                         print >>sys.stderr, '  adding tags'

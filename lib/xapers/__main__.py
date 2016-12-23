@@ -469,7 +469,7 @@ if __name__ == '__main__':
                     print bibtex
                 else:
                     try:
-                        print Bibtex(bibtex)[0].as_string()
+                        print Bibtex.from_string(bibtex)[0].as_string()
                     except:
                         print >>sys.stderr, "Failed to parse retrieved bibtex data."
                         print >>sys.stderr, "Use --raw option to view raw retrieved data."

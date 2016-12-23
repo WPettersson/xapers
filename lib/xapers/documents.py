@@ -409,16 +409,12 @@ class Document():
         self.bibentry = bibentry
         self._index_bibentry(self.bibentry)
 
-    def add_bibtex(self, bibtex):
-        """Add bibtex to document, as string or file path."""
-        self.add_bibentry(Bibtex(bibtex)[0])
-
     def _load_bib(self):
         if self.bibentry:
             return
         bibpath = self.get_bibpath()
         if os.path.exists(bibpath):
-            self.bibentry = Bibtex(bibpath)[0]
+            self.bibentry = Bibtex.from_file(bibpath)[0]
 
     def get_bibtex(self):
         """Get the bib for document as a bibtex string."""
@@ -429,6 +425,7 @@ class Document():
             return bibtex.strip()
 
     def get_bibdata(self):
+        """Get the bib for document as a dictionary."""
         self._load_bib()
         if self.bibentry:
             data = self.bibentry.get_fields()
