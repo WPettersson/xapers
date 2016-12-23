@@ -22,11 +22,12 @@ import os
 import sys
 import io
 import json
-import pybtex
-from pybtex.bibtex.utils import split_name_list
-from pybtex.database import Entry, Person
-from pybtex.database.input import bibtex as inparser
-from pybtex.database.output import bibtex as outparser
+# import pybtex
+# from pybtex.bibtex.utils import split_name_list
+# from pybtex.database import Entry, Person
+# from pybtex.database.input import bibtex as inparser
+# from pybtex.database.output import bibtex as outparser
+import bibtexparser
 
 def clean_bib_string(string):
     for char in ['{', '}']:
@@ -50,26 +51,31 @@ class Bibtex():
     """
     # http://www.bibtex.org/Format/
     def __init__(self, bibdata):
-        self.keys = bibdata.entries.keys()
-        self.entries = bibdata.entries.values()
+        self.keys = bibdata.entries_dict.keys()
+        print(self.keys)
+        self.entries = bibdata.entries_dict.values()
+        print(self.entries)
         self.index = -1
         self.max = len(self.entries)
 
     @classmethod
     def from_file(cls, bibfile):
-        parser = inparser.Parser(encoding='utf-8')
-        bibdata = parser.parse_file(bibfile)
+        with open(bibfile) as f:
+            bibdata = bibtexparser.load(f)
+        print(bibdata)
+        print(bibdata.entries)
         return cls(bibdata)
 
     @classmethod
     def from_string(cls, bibstring):
-        # StringIO requires unicode input
-        # http://nedbatchelder.com/text/unipain.html
-        assert type(bibstring) is unicode, "Bibtex strings must be unicode"
-        parser = inparser.Parser(encoding='utf-8')
-        with io.StringIO(bibstring) as stream:
-            bibdata = parser.parse_stream(stream)
-        return cls(bibdata)
+        return cls(bibtexparser.loads(bibstring))
+        # # StringIO requires unicode input
+        # # http://nedbatchelder.com/text/unipain.html
+        # assert type(bibstring) is unicode, "Bibtex strings must be unicode"
+        # parser = inparser.Parser(encoding='utf-8')
+        # with io.StringIO(bibstring) as stream:
+        #     bibdata = parser.parse_stream(stream)
+        # return cls(bibdata)
 
     def __getitem__(self, index):
         key = self.keys[index]
@@ -98,17 +104,16 @@ class Bibentry():
         self.key = key
         self.entry = entry
 
+    def __getitem__(self, item):
+        return self.entry[item]
+
     def get_authors(self):
         """Return a list of authors."""
-        authors = []
-        if 'author' in self.entry.persons:
-            for p in self.entry.persons['author']:
-                authors.append(clean_bib_string(unicode(p)))
-        return authors
+        return self.entry['author'].split(' and ')
 
     def get_fields(self):
         """Return a dict of non-author fields."""
-        bibfields = self.entry.fields
+        bibfields = self.entry
         # entry.fields is actually already a dict, but we want to
         # clean the strings first
         fields = {}
@@ -118,7 +123,7 @@ class Bibentry():
 
     def set_file(self, path):
         # FIXME: what's the REAL proper format for this
-        self.entry.fields['file'] = ':%s:%s' % (path, 'pdf')
+        self.entry['file'] = ':%s:%s' % (path, 'pdf')
 
     def get_file(self):
         """Returns file path if file field exists.
@@ -127,7 +132,7 @@ class Bibentry():
 
         """
         try:
-            parsed = self.entry.fields['file'].split(':')
+            parsed = self.entry['file'].split(':')
             if len(parsed) > 1:
                 return parsed[1]
             else:
@@ -138,23 +143,18 @@ class Bibentry():
             return None
 
     def _entry2db(self):
-        db = pybtex.database.BibliographyData()
-        db.add_entry(self.key, self.entry)
+        db = bibtexparser.BibDatabase()
+        db.entries = [self.entry]
         return db
 
     def as_string(self):
         """Return entry as formatted bibtex string."""
-        writer = outparser.Writer()
-        with io.StringIO() as stream:
-            writer.write_stream(self._entry2db(), stream)
-            string = stream.getvalue()
-        string = string.strip()
-        return string
+        return bibtexparser.dumps(self._entry2db())
 
     def to_file(self, path):
         """Write entry bibtex to file."""
-        writer = outparser.Writer(encoding='utf-8')
-        writer.write_file(self._entry2db(), path)
+        with open(path, 'w') as f:
+            bibtexparser.dump(self._entry2db(), f)
 
 ##################################################
 
