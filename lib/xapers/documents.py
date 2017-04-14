@@ -362,14 +362,14 @@ class Document():
         # FIXME: what to do if year is not an int?
         try:
             year = int(year)
+            prefix = self.db._find_prefix('year')
+            for term in self._term_iter(prefix):
+                self._remove_term(prefix, year)
+            self._add_term(prefix, year)
+            facet = self.db._find_facet('year')
+            self.xapian_doc.add_value(facet, xapian.sortable_serialise(year))
         except ValueError:
             pass
-        prefix = self.db._find_prefix('year')
-        for term in self._term_iter(prefix):
-            self._remove_term(prefix, year)
-        self._add_term(prefix, year)
-        facet = self.db._find_facet('year')
-        self.xapian_doc.add_value(facet, xapian.sortable_serialise(year))
 
     ########################################
     # bibtex
