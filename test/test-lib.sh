@@ -297,6 +297,16 @@ test_expect_equal_file ()
     fi
 }
 
+# Like test_expect_equal, but arguments are bibtex files to be
+# canonicalized before diff'ing.  If an argument cannot be parsed, it
+# is used unchanged so that there's something to diff against.
+test_expect_equal_bibtex () {
+    output=$(echo "$1" | python bibtex_normalise.py || echo "$2")
+    expected=$(echo "$2" | python bibtex_normalise.py || echo "$2")
+    shift 2
+    test_expect_equal "$output" "$expected" "$@"
+}
+
 # Like test_expect_equal, but arguments are JSON expressions to be
 # canonicalized before diff'ing.  If an argument cannot be parsed, it
 # is used unchanged so that there's something to diff against.
