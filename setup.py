@@ -23,7 +23,7 @@ setup(
 
     requires = [
         'xapian',
-        'pybtex',
+        'bibtexparser',
         'urwid'
         ],
     )
