@@ -18,32 +18,28 @@ Copyright 2012-2016
 Jameson Rollins <jrollins@finestructure.net>
 """
 
-import os
-import sys
-import io
 import json
-# import pybtex
-# from pybtex.bibtex.utils import split_name_list
-# from pybtex.database import Entry, Person
-# from pybtex.database.input import bibtex as inparser
-# from pybtex.database.output import bibtex as outparser
 import bibtexparser
+
 
 def clean_bib_string(string):
     for char in ['{', '}']:
-        string = string.replace(char,'')
+        string = string.replace(char, '')
     return string
 
 ##################################################
+
 
 class BibtexError(Exception):
     """Base class for Xapers bibtex exceptions."""
     def __init__(self, msg):
         self.msg = msg
+
     def __str__(self):
         return self.msg
 
 ##################################################
+
 
 class Bibtex():
     """Represents a bibtex database.
@@ -69,13 +65,6 @@ class Bibtex():
     @classmethod
     def from_string(cls, bibstring):
         return cls(bibtexparser.loads(bibstring))
-        # # StringIO requires unicode input
-        # # http://nedbatchelder.com/text/unipain.html
-        # assert type(bibstring) is unicode, "Bibtex strings must be unicode"
-        # parser = inparser.Parser(encoding='utf-8')
-        # with io.StringIO(bibstring) as stream:
-        #     bibdata = parser.parse_stream(stream)
-        # return cls(bibdata)
 
     def __getitem__(self, index):
         key = self.keys[index]
@@ -96,6 +85,7 @@ class Bibtex():
 
 ##################################################
 
+
 class Bibentry():
     """Represents an individual entry in a bibtex database.
 
@@ -112,7 +102,7 @@ class Bibentry():
         return self.entry['author'].split(' and ')
 
     def get_fields(self):
-        """Return a dict of non-author fields."""
+        """Return a dict of fields."""
         bibfields = self.entry
         # entry.fields is actually already a dict, but we want to
         # clean the strings first
@@ -158,56 +148,15 @@ class Bibentry():
 
 ##################################################
 
+
 def data2bib(data, key, type='article'):
     """Convert a python dict into a Bibentry object."""
-
-    if not data:
-        return
-
-    # need to remove authors field from data
-    authors = None
-    if 'authors' in data:
-        authors = data['authors']
-        if isinstance(authors, str):
-            authors = split_name_list(authors)
-            if len(authors) == 1:
-                authors = authors[0].split(',')
-        del data['authors']
-
-    entry = Entry(type, fields=data)
-    if authors:
-        for p in authors:
-            entry.add_person(Person(p), 'author')
-
-    return Bibentry(key, entry).as_string()
+    return Bibentry(key, data).as_string()
 
 
 def json2bib(jsonstring, key, type='article'):
     """Convert a json string into a Bibentry object."""
-
     if not json:
         return
-
     data = json.loads(jsonstring)
-
-    # need to remove authors field from data
-    authors = None
-    if 'author' in data:
-        authors = data['author']
-        del data['author']
-
-    if 'issued' in data:
-        data['year'] = str(data['issued']['date-parts'][0][0])
-        del data['issued']
-
-    # delete other problematic fields
-    if 'editor' in data:
-        del data['editor']
-
-    entry = Entry(type, fields=data)
-
-    if authors:
-        for author in authors:
-            entry.add_person(Person(first=author['given'], last=author['family']), 'author')
-
-    return Bibentry(key, entry).as_string()
+    return Bibentry(key, data).as_string()
