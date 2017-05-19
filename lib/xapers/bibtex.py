@@ -95,7 +95,11 @@ class Bibentry():
 
     def get_authors(self):
         """Return a list of authors."""
-        return self.entry['author'].split(' and ')
+        try:
+            return self.entry['author'].split(' and ')
+        except KeyError:
+            # If the bibtex doesn't have an author, don't crash
+            return []
 
     def get_fields(self):
         """Return a dict of fields."""
