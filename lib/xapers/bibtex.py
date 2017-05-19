@@ -48,9 +48,7 @@ class Bibtex():
     # http://www.bibtex.org/Format/
     def __init__(self, bibdata):
         self.keys = bibdata.entries_dict.keys()
-        print(self.keys)
         self.entries = bibdata.entries_dict.values()
-        print(self.entries)
         self.index = -1
         self.max = len(self.entries)
 
@@ -58,8 +56,6 @@ class Bibtex():
     def from_file(cls, bibfile):
         with open(bibfile) as f:
             bibdata = bibtexparser.load(f)
-        print(bibdata)
-        print(bibdata.entries)
         return cls(bibdata)
 
     @classmethod
