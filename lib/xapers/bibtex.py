@@ -133,7 +133,7 @@ class Bibentry():
             return None
 
     def _entry2db(self):
-        db = bibtexparser.BibDatabase()
+        db = bibtexparser.bibdatabase.BibDatabase()
         db.entries = [self.entry]
         return db
 
